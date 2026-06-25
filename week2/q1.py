@@ -86,21 +86,49 @@ class History:
     def get_valid_actions(self):
         # get the empty squares from the board
         # Feel free to implement this in anyway if needed
-        pass
+        i=9
+        a=[]
+        while i>0:
+            i=i-1
+            if self.board[i]=='0':
+                a.append(i)
+
+        return a
 
     def is_terminal_history(self):
         # check if the history is a terminal history
         # Feel free to implement this in anyway if needed
-        pass
+        winning_combos = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], # Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], # Cols
+        [0, 4, 8], [2, 4, 6]             # Diagonals
+    ]
+    
+        for combo in winning_combos:
+         # Check if the board has the same non-zero player in these 3 spots
+            if self.board[combo[0]] != '0' and self.board[combo[0]] == self.board[combo[1]] == self.board[combo[2]]:
+                 return self.board[combo[0]]
+        return '0' in self.board
+        # 'x'= x won 'o' = o won 1=game not over 0=tie
+
 
     def get_utility_given_terminal_history(self):
         # Feel free to implement this in anyway if needed
-        pass
+        if self.is_terminal_history()==self.current_player():
+            return 1
+        elif self.is_terminal_history()==0:return 0
+        else : return -1
 
     def update_history(self, action):
         # In case you need to create a deepcopy and update the history obj to get the next history object.
         # Feel free to implement this in anyway if needed
-        pass
+        HIS = copy.deepcopy(self)
+        HIS.history.append(action)
+        HIS.board[action]=HIS.player
+        if HIS.player=="x": HIS.player="o"
+        elif HIS.player=="o":HIS.player="x"
+        return HIS
+        
 
 
 def backward_induction(history_obj):
@@ -122,7 +150,29 @@ def backward_induction(history_obj):
     # actions. But since tictactoe is a PIEFG, there always exists an optimal deterministic strategy (SPNE). So your
     # policy will be something like this {"0": 1, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0} where
     # "0" was the one of the best actions for the current player/history.
-    return -2
+    choices=history_obj.get_valid_actions()
+    max_util=-2
+    if(history_obj.is_terminal_history()!=1): #1=game not over
+        return history_obj.get_utility_given_terminal_history()
+    for choice in choices:
+        print (choice)
+        his=history_obj.update_history(choice)
+        ut=-backward_induction(his)
+        if max_util<ut:
+            max_util=ut
+            result = "".join(str(num) for num in history_obj.history)
+         
+            if history_obj.current_player()=="x":
+                if result not in strategy_dict_x:
+                    strategy_dict_x[result] = {"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0}
+                strategy_dict_x[result][str(choice)]=1
+            if history_obj.current_player()=="o":
+                if result not in strategy_dict_o:
+                 strategy_dict_o[result] = {"0":0,"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0}
+                strategy_dict_o[result][str(choice)]=1
+    
+            
+    return max_util
     # TODO implement
 
 
